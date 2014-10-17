@@ -63,6 +63,13 @@ module WineBouncer
     end
 
     ###
+    # returns true if the endpoint is protected but the protection is optional, otherwise false
+    ###
+    def endpoint_protection_optional?
+      auth_strategy.endpoint_protection_optional?(route_context)
+    end
+
+    ###
     # Returns all auth scopes from an protected endpoint.
     # [ nil ] if none, otherwise an array of [ :scopes ]
     ###
@@ -78,9 +85,11 @@ module WineBouncer
       scopes = Doorkeeper.configuration.default_scopes if scopes.empty?
       unless valid_doorkeeper_token?(*scopes)
         if !doorkeeper_token || !doorkeeper_token.accessible?
-          error = Doorkeeper::OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
-          # TODO: localization and better error reporting
-          raise WineBouncer::Errors::OAuthUnauthorizedError, 'unauthorized'
+          unless endpoint_protection_optional?
+            error = Doorkeeper::OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
+            # TODO: localization and better error reporting
+            raise WineBouncer::Errors::OAuthUnauthorizedError, 'unauthorized'
+          end
         else
           error = Doorkeeper::OAuth::ForbiddenTokenResponse.from_scopes(scopes)
           # TODO: localization and better error reporting

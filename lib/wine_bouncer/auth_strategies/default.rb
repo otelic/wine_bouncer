@@ -6,8 +6,16 @@ module WineBouncer
         has_authorizations?(context)
       end
 
+      def endpoint_protection_optional?(context)
+        endpoint_protected?(context) &&
+          endpoint_authorizations(context).has_key?(:optional) &&
+          endpoint_authorizations(context)[:optional] == true
+      end
+
       def has_auth_scopes?(context)
-        has_authorizations?(context) && endpoint_authorizations(context).has_key?(:scopes) && !endpoint_authorizations(context)[:scopes].empty?
+        has_authorizations?(context) &&
+          endpoint_authorizations(context).has_key?(:scopes) &&
+          !endpoint_authorizations(context)[:scopes].empty?
       end
 
       def auth_scopes(context)
